@@ -172,7 +172,7 @@
     setStatus("Checking your shared license...", false);
     try {
       await request("/api/verify", { licenseKey: licenseKey, deviceId: getDeviceId() });
-      setStored(SUTE_CHECKED, String(Date.now()));
+      setStored(SUITE_CHECKED, String(Date.now()));
       licensed = true;
       gate.hidden = true;
       setStatus("Shared license active on this installation.", false);
