@@ -1,0 +1,47 @@
+name: Build and publish ToolKeeper release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+
+      - name: Build release ZIP
+        run: python3 scripts/package_release.py "$GITHUB_REF_NAME"
+
+      - name: Prepare release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+            -f tag_name="$GITHUB_REF_NAME" \
+            --jq .body > /tmp/toolkeeper-generated-notes.md
+          cat <<'EOF' > /tmp/toolkeeper-install-guide-template.md
+          ## Download and install
+
+          1. Under **Assets**, download `ToolKeeper-{VERSION}.zip`. Do not download the “Source code” files.
+          2. Extract the ZIP and open the `ToolKeeper` folder.
+          3. Run `install-macos.command` on macOS or `install-windows.bat` on Windows.
+          4. Open **Window > Extensions (Legacy) > ToolKeeper** in After Effects.
+          EOF
+          sed "s/{VERSION}/$GITHUB_REF_NAME/g" /tmp/toolkeeper-install-guide-template.md > /tmp/toolkeeper-release-notes.md
+          printf '\n---\n\n## Changes\n' >> /tmp/toolkeeper-release-notes.md
+          cat /tmp/toolkeeper-generated-notes.md >> /tmp/toolkeeper-release-notes.md
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/ToolKeeper-$GITHUB_REF_NAME.zip" \
+            --title "ToolKeeper $GITHUB_REF_NAME" \
+            --notes-file /tmp/toolkeeper-release-notes.md
