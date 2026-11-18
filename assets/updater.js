@@ -28,7 +28,6 @@
 
   [versionLink, creatorLink, manualLink].forEach(function (link) {
     if (!link) return;
-    if (config.development && link === versionLink) return;
     link.addEventListener('click', function (event) {
       event.preventDefault();
       openExternal(link);
@@ -38,20 +37,10 @@
   if (versionLink) {
     var version = String(config.currentVersion || '').replace(/^v/i, '');
     versionLink.textContent = config.development ? 'ToolKeeper Dev' : ('ToolKeeper v' + (version || ''));
-    versionLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper') + '/releases';
-    if (config.development) {
-      versionLink.removeAttribute('href');
-      versionLink.title = 'Preview the update screen';
-      versionLink.style.cursor = 'pointer';
-      versionLink.addEventListener('click', function (event) {
-        event.preventDefault();
-        showNotice('This is a preview of the update screen. No files were downloaded or changed.', true);
-        if (retryButton) retryButton.textContent = 'Retry update';
-      });
-    }
+    versionLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper') + '/releases/latest';
   }
-  if (creatorLink) creatorLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper');
-  if (manualLink) manualLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper') + '/releases';
+  if (creatorLink) creatorLink.href = 'https://www.tiktok.com/@morley.ae';
+  if (manualLink) manualLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper') + '/releases/latest';
 
   function showNotice(text, allowContinue) {
     if (!notice) return;

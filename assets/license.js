@@ -216,6 +216,10 @@
   input.addEventListener("keydown", function (event) { if (event.key === "Enter") activateLicense(); });
   cancel.addEventListener("click", function () { if (!busy) gate.hidden = true; });
   manage.addEventListener("click", function () {
+    var settingsDialog = document.getElementById("settings-dialog");
+    if (settingsDialog && typeof settingsDialog.close === "function" && settingsDialog.open) {
+      settingsDialog.close();
+    }
     showGate("Enter a license key to activate or verify ToolKeeper and SceneKeeper.", !licensed);
   });
 
