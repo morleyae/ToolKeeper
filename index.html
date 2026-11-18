@@ -5,9 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ToolKeeper</title>
   <link rel="stylesheet" href="./assets/panel.css?v=17">
+  <link rel="stylesheet" href="./assets/license.css?v=1">
   <link rel="stylesheet" href="./assets/scene-keeper.css?v=20">
 </head>
 <body>
+  <div id="license-gate" class="license-gate" role="dialog" aria-modal="true" aria-labelledby="license-gate-title" hidden>
+    <div class="license-gate-card">
+      <h2 id="license-gate-title">Activate ToolKeeper</h2>
+      <p id="license-gate-copy">Enter your license key to activate ToolKeeper and SceneKeeper on this installation.</p>
+      <label for="license-key-input">License key</label>
+      <input id="license-key-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="SK-...">
+      <p class="license-support-note">For support or to move a purchased key to a new device, message <strong>morley.ae</strong> on Discord.</p>
+      <p id="license-gate-status" class="license-gate-status" role="status" aria-live="polite"></p>
+      <div class="license-gate-actions">
+        <button id="license-cancel-button" class="secondary" type="button" hidden>Close</button>
+        <button id="license-activate-button" type="button">Activate / Verify</button>
+      </div>
+    </div>
+  </div>
+
   <header class="topbar">
     <div class="section-heading">
       <h1>ToolKeeper</h1>
@@ -172,6 +188,10 @@
   <dialog id="settings-dialog">
     <form method="dialog" class="settings-form">
       <h2>Settings</h2>
+      <div class="settings-license-row">
+        <div><strong>ToolKeeper License</strong><small id="license-settings-status" role="status">Checking license service...</small></div>
+        <button id="license-manage-button" type="button" class="secondary compact">Manage</button>
+      </div>
       <label class="settings-select-row">Start view<select id="default-view"><option value="layer">Layer</option><option value="text">Text</option><option value="audio">Audio</option></select></label>
       <label class="checkbox-row"><input id="confirm-destructive" type="checkbox" checked><span>Confirm destructive actions</span></label>
       <label class="checkbox-row"><input id="clear-search-on-use" type="checkbox" checked><span>Clear search after using a result</span></label>
@@ -195,6 +215,8 @@
     <a id="toolkeeper-creator-link" class="panel-credit-link" href="https://github.com/morleyae/ToolKeeper" target="_blank" rel="noopener noreferrer">by morley.ae</a>
   </footer>
 
+  <script src="./assets/license-config.js?v=1"></script>
+  <script src="./assets/license.js?v=1"></script>
   <script src="./assets/update-config.js?v=1"></script>
   <script src="./assets/updater.js?v=1"></script>
   <script src="./assets/panel.js?v=21"></script>
