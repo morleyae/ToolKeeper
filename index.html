@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ToolKeeper</title>
   <link rel="stylesheet" href="./assets/panel.css?v=17">
-  <link rel="stylesheet" href="./assets/scene-keeper.css?v=19">
+  <link rel="stylesheet" href="./assets/scene-keeper.css?v=20">
 </head>
 <body>
   <header class="topbar">
@@ -37,9 +37,9 @@
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 3h10M8 3v10M5.5 13h5"/></svg>
       <span>Text</span>
     </button>
-    <button class="view-tab" type="button" data-view="music" aria-label="Music" title="Music">
+    <button class="view-tab" type="button" data-view="audio" aria-label="Audio" title="Audio">
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6.5 11.5V4l6-1.5v7.2M6.5 11.5a2 2 0 1 1-2-2h2v2zm6-1.8a2 2 0 1 1-2-2h2v2z"/></svg>
-      <span>Music</span>
+      <span>Audio</span>
     </button>
     <button id="search-toggle" class="view-tab search-toggle" type="button" aria-label="Search functions" title="Search functions">
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="6.8" cy="6.8" r="4.3"/><path d="m10 10 3.5 3.5"/></svg>
@@ -56,16 +56,21 @@
 
   <main>
     <section data-view="layer" aria-labelledby="layer-heading">
-      <h2 id="layer-heading">LAYERS</h2>
+      <h2 id="layer-heading">LAYER TOOLS</h2>
       <button id="new-layer-button" class="wide new-layer-button" type="button"><span class="action-icon">＋</span><span>New Layer</span></button>
       <div class="button-grid two-column layer-actions-grid">
+        <h3 class="layer-subsection-heading">Layers</h3>
         <button data-action="precomp"><span class="action-icon">◫</span><span>Precomp</span></button>
         <button data-action="precomp-each"><span class="action-icon">▤</span><span>Precomp each</span></button>
         <button data-action="decomp"><span class="action-icon">⌂</span><span>Decomp</span></button>
         <button data-action="duplicate"><span class="action-icon">▧</span><span>Duplicate</span></button>
         <button data-action="rename"><span class="action-icon">↝</span><span>Rename</span></button>
+      </div>
+      <div class="button-grid two-column keyframe-actions-grid">
+        <h3 class="layer-subsection-heading">Keyframes</h3>
         <button data-action="fit"><span class="action-icon">↔</span><span>Fit</span></button>
         <button data-action="invert"><span class="action-icon">⇄</span><span>Invert</span></button>
+        <button data-action="trim-keyframes"><span class="action-icon">⌜</span><span>Trim to Keyframes</span></button>
       </div>
     </section>
 
@@ -77,7 +82,7 @@
       <div class="segmented"><button data-mode="smooth" class="active">Smooth</button><button data-mode="replace">Replace</button><button data-mode="remove">Remove</button></div>
     </section>
 
-    <section data-view="music" aria-labelledby="beat-heading">
+    <section data-view="audio" aria-labelledby="beat-heading">
       <div class="section-heading"><h2 id="beat-heading">BEAT MARKERS</h2><button class="mini-icon" data-action="beat-reset" title="Reset markers">↺</button></div>
       <button class="wide" data-action="beat-markers" disabled><span id="beat-placeholder">Select a layer with sound</span></button>
       <label class="layer-select"><span>Layer</span><select id="beat-layer"><option value="comp">Use the whole comp</option></select></label>
@@ -167,7 +172,7 @@
   <dialog id="settings-dialog">
     <form method="dialog" class="settings-form">
       <h2>Settings</h2>
-      <label class="settings-select-row">Start view<select id="default-view"><option value="layer">Layer</option><option value="text">Text</option><option value="music">Music</option></select></label>
+      <label class="settings-select-row">Start view<select id="default-view"><option value="layer">Layer</option><option value="text">Text</option><option value="audio">Audio</option></select></label>
       <label class="checkbox-row"><input id="confirm-destructive" type="checkbox" checked><span>Confirm destructive actions</span></label>
       <label class="checkbox-row"><input id="clear-search-on-use" type="checkbox" checked><span>Clear search after using a result</span></label>
       <div class="dialog-actions"><button value="close" class="primary">Done</button></div>
@@ -187,11 +192,11 @@
   </div>
   <footer class="panel-credit">
     <a id="toolkeeper-version" class="panel-credit-link" href="https://github.com/morleyae/ToolKeeper/releases" target="_blank" rel="noopener noreferrer">ToolKeeper Dev</a>
-    <a id="toolkeeper-creator-link" class="panel-credit-link" href="https://www.tiktok.com/@morley.ae" target="_blank" rel="noopener noreferrer">by morley.ae</a>
+    <a id="toolkeeper-creator-link" class="panel-credit-link" href="https://github.com/morleyae/ToolKeeper" target="_blank" rel="noopener noreferrer">by morley.ae</a>
   </footer>
 
   <script src="./assets/update-config.js?v=1"></script>
   <script src="./assets/updater.js?v=1"></script>
-  <script src="./assets/panel.js?v=20"></script>
+  <script src="./assets/panel.js?v=21"></script>
 </body>
 </html>

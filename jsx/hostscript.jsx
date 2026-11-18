@@ -141,3 +141,352 @@ function tkCreateTextStyle(){try{tkBeginUndo("Create Text Style");var comp=tkSel
 function tkSaveTextStyle(){try{var l=null;var comp=tkSelectedComp();if(!comp)return "Select a text layer first.";for(var i=1;i<=comp.selectedLayers.length;i++){if(comp.selectedLayers[i-1] instanceof TextLayer){l=comp.selectedLayers[i-1];break;}}if(!l)return "Select a text layer first.";var doc=l.property("Source Text").value;app.settings.saveSetting("ToolKeeper","textStyleFont",doc.font||"");app.settings.saveSetting("ToolKeeper","textStyleSize",doc.fontSize||0);return "Text style saved.";}catch(e){return "ERROR: "+e.toString();}}
 
 function tkCreateAutoCaptions(){try{tkBeginUndo("Create Captions");var comp=tkSelectedComp();if(!comp)return "Select a composition first.";var audio=null;for(var i=1;i<=comp.numLayers;i++){if(comp.layer(i).hasAudio){audio=comp.layer(i);break;}}if(!audio)return "Select or enable a layer with audio.";var duration=audio.outPoint-audio.inPoint;var l=comp.layers.addText("Audio caption");var prop=l.property("Source Text");prop.setValue("Caption text");l.inPoint=audio.inPoint;l.outPoint=audio.outPoint;tkEndUndo();return "Placeholder caption created. Connect speech transcription to replace it.";}catch(e){try{tkEndUndo()}catch(x){}return "ERROR: "+e.toString();}}
+
+function tkCollectKeyframedProperties(group, properties) {
+  var i;
+  for (i = 1; i <= group.numProperties; i++) {
+    var property = group.property(i);
+    if (typeof property.numProperties === "number" && property.numProperties > 0) {
+      tkCollectKeyframedProperties(property, properties);
+    } else if (property.propertyType === PropertyType.PROPERTY && property.numKeys > 0) {
+      properties.push(property);
+    }
+  }
+}
+
+function tkSnapshotPropertyKeys(property) {
+  var keys = [];
+  var spatial = property.propertyValueType === PropertyValueType.TwoD_SPATIAL ||
+    property.propertyValueType === PropertyValueType.ThreeD_SPATIAL;
+  var i;
+  for (i = 1; i <= property.numKeys; i++) {
+    var key = {
+      time: property.keyTime(i),
+      value: property.keyValue(i),
+      inInterpolation: property.keyInInterpolationType(i),
+      outInterpolation: property.keyOutInterpolationType(i),
+      inEase: property.keyInTemporalEase(i),
+      outEase: property.keyOutTemporalEase(i),
+      temporalContinuous: property.keyTemporalContinuous(i),
+      temporalAutoBezier: property.keyTemporalAutoBezier(i)
+    };
+    if (spatial) {
+      key.inSpatialTangent = property.keyInSpatialTangent(i);
+      key.outSpatialTangent = property.keyOutSpatialTangent(i);
+      key.spatialContinuous = property.keySpatialContinuous(i);
+      key.spatialAutoBezier = property.keySpatialAutoBezier(i);
+    }
+    keys.push(key);
+  }
+  return keys;
+}
+
+function tkReplacePropertyKeys(property, keys, firstTime, lastTime, originalFirstTime, originalLastTime, remap) {
+  var timeScale = remap ? (lastTime - firstTime) / (originalLastTime - originalFirstTime) : 1;
+  var i;
+  for (i = property.numKeys; i >= 1; i--) property.removeKey(i);
+  for (i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var time = key.time;
+    if (remap) {
+      time = originalLastTime === originalFirstTime
+        ? firstTime
+        : firstTime + (key.time - originalFirstTime) * (lastTime - firstTime) / (originalLastTime - originalFirstTime);
+    }
+    property.setValueAtTime(time, key.value);
+    var keyIndex = property.nearestKeyIndex(time);
+    var inEase = [];
+    var outEase = [];
+    var easeIndex;
+    for (easeIndex = 0; easeIndex < key.inEase.length; easeIndex++) {
+      inEase.push(new KeyframeEase(key.inEase[easeIndex].speed / timeScale, key.inEase[easeIndex].influence));
+      outEase.push(new KeyframeEase(key.outEase[easeIndex].speed / timeScale, key.outEase[easeIndex].influence));
+    }
+    property.setInterpolationTypeAtKey(keyIndex, key.inInterpolation, key.outInterpolation);
+    property.setTemporalEaseAtKey(keyIndex, inEase, outEase);
+    property.setTemporalContinuousAtKey(keyIndex, key.temporalContinuous);
+    property.setTemporalAutoBezierAtKey(keyIndex, key.temporalAutoBezier);
+    if (property.propertyValueType === PropertyValueType.TwoD_SPATIAL ||
+        property.propertyValueType === PropertyValueType.ThreeD_SPATIAL) {
+      property.setSpatialTangentsAtKey(keyIndex, key.inSpatialTangent, key.outSpatialTangent);
+      property.setSpatialContinuousAtKey(keyIndex, key.spatialContinuous);
+      property.setSpatialAutoBezierAtKey(keyIndex, key.spatialAutoBezier);
+    }
+  }
+}
+
+function tkFitKeyframesInScope(layer, roots, frameDuration) {
+  var properties = [];
+  var rootIndex;
+  for (rootIndex = 0; rootIndex < roots.length; rootIndex++) {
+    tkCollectKeyframedProperties(roots[rootIndex], properties);
+  }
+  if (properties.length === 0) return { skipped: true };
+
+  var snapshots = [];
+  var firstKeyTime = null;
+  var lastKeyTime = null;
+  var hasRovingKey = false;
+  var propertyIndex;
+  for (propertyIndex = 0; propertyIndex < properties.length; propertyIndex++) {
+    var property = properties[propertyIndex];
+    var keys = tkSnapshotPropertyKeys(property);
+    snapshots.push({ property: property, keys: keys });
+    if (property.isSpatial) {
+      var keyIndex;
+      for (keyIndex = 1; keyIndex <= property.numKeys; keyIndex++) {
+        if (property.keyRoving(keyIndex)) hasRovingKey = true;
+      }
+    }
+    if (firstKeyTime === null || keys[0].time < firstKeyTime) firstKeyTime = keys[0].time;
+    if (lastKeyTime === null || keys[keys.length - 1].time > lastKeyTime) lastKeyTime = keys[keys.length - 1].time;
+  }
+
+  var targetFirstTime = layer.inPoint;
+  var targetLastTime = layer.outPoint - frameDuration;
+  if (hasRovingKey || lastKeyTime <= firstKeyTime || targetLastTime <= targetFirstTime) return { skipped: true };
+
+  var changedSnapshots = [];
+  try {
+    for (propertyIndex = 0; propertyIndex < snapshots.length; propertyIndex++) {
+      changedSnapshots.push(snapshots[propertyIndex]);
+      tkReplacePropertyKeys(snapshots[propertyIndex].property, snapshots[propertyIndex].keys,
+        targetFirstTime, targetLastTime, firstKeyTime, lastKeyTime, true);
+    }
+  } catch (error) {
+    for (propertyIndex = changedSnapshots.length - 1; propertyIndex >= 0; propertyIndex--) {
+      try { tkReplacePropertyKeys(changedSnapshots[propertyIndex].property, changedSnapshots[propertyIndex].keys, 0, 0, 0, 0, false); } catch (restoreError) {}
+    }
+    return { failed: error.toString() };
+  }
+  return { adjusted: true };
+}
+
+function tkCollectPropertiesWithSelectedKeys(group, selectedProperties) {
+  var i;
+  for (i = 1; i <= group.numProperties; i++) {
+    var property = group.property(i);
+    if (typeof property.numProperties === "number" && property.numProperties > 0) {
+      tkCollectPropertiesWithSelectedKeys(property, selectedProperties);
+    } else if (property.propertyType === PropertyType.PROPERTY &&
+        property.numKeys > 0 && property.selectedKeys && property.selectedKeys.length > 0) {
+      tkAddSelectedKeyProperty(property, selectedProperties);
+    }
+  }
+}
+
+function tkAddSelectedKeyProperty(property, selectedProperties) {
+  if (typeof property.numProperties === "number" && property.numProperties > 0) {
+    tkCollectPropertiesWithSelectedKeys(property, selectedProperties);
+    return;
+  }
+  if (property.propertyType !== PropertyType.PROPERTY ||
+      property.numKeys === 0 || !property.selectedKeys || property.selectedKeys.length === 0) return;
+  var i;
+  for (i = 0; i < selectedProperties.length; i++) {
+    if (selectedProperties[i].property === property) return;
+  }
+  selectedProperties.push({ property: property, selectedKeys: property.selectedKeys });
+}
+
+function tkFitSelectedKeyframesInLayer(layer, frameDuration) {
+  var selectedProperties = [];
+  tkCollectPropertiesWithSelectedKeys(layer, selectedProperties);
+  var explicitlySelectedProperties = layer.selectedProperties || [];
+  var selectedPropertyIndex;
+  for (selectedPropertyIndex = 0; selectedPropertyIndex < explicitlySelectedProperties.length; selectedPropertyIndex++) {
+    tkAddSelectedKeyProperty(explicitlySelectedProperties[selectedPropertyIndex], selectedProperties);
+  }
+  if (selectedProperties.length === 0) return null;
+
+  var snapshots = [];
+  var firstSelectedTime = null;
+  var lastSelectedTime = null;
+  var hasRovingSelectedKey = false;
+  var propertyIndex;
+  for (propertyIndex = 0; propertyIndex < selectedProperties.length; propertyIndex++) {
+    var property = selectedProperties[propertyIndex].property;
+    var selectedIndices = selectedProperties[propertyIndex].selectedKeys;
+    var allKeys = tkSnapshotPropertyKeys(property);
+    var selectedKeys = [];
+    var selectedIndex;
+    for (selectedIndex = 0; selectedIndex < selectedIndices.length; selectedIndex++) {
+      var keyIndex = selectedIndices[selectedIndex];
+      if (keyIndex < 1 || keyIndex > allKeys.length) continue;
+      selectedKeys.push({ index: keyIndex, key: allKeys[keyIndex - 1] });
+      if (property.isSpatial && property.keyRoving(keyIndex)) hasRovingSelectedKey = true;
+      if (firstSelectedTime === null || allKeys[keyIndex - 1].time < firstSelectedTime) firstSelectedTime = allKeys[keyIndex - 1].time;
+      if (lastSelectedTime === null || allKeys[keyIndex - 1].time > lastSelectedTime) lastSelectedTime = allKeys[keyIndex - 1].time;
+    }
+    if (selectedKeys.length > 0) snapshots.push({ property: property, keys: allKeys, selectedKeys: selectedKeys });
+  }
+  if (snapshots.length === 0) return { skipped: true };
+
+  var targetFirstTime = layer.inPoint;
+  var targetLastTime = layer.outPoint - frameDuration;
+  if (hasRovingSelectedKey || lastSelectedTime <= firstSelectedTime || targetLastTime <= targetFirstTime) return { skipped: true };
+
+  var tolerance = frameDuration * 0.0001;
+  for (propertyIndex = 0; propertyIndex < snapshots.length; propertyIndex++) {
+    var snapshot = snapshots[propertyIndex];
+    var selectedByIndex = [];
+    var keyIndex;
+    for (keyIndex = 0; keyIndex < snapshot.selectedKeys.length; keyIndex++) selectedByIndex[snapshot.selectedKeys[keyIndex].index] = true;
+    for (keyIndex = 1; keyIndex <= snapshot.keys.length; keyIndex++) {
+      if (selectedByIndex[keyIndex]) continue;
+      for (selectedIndex = 0; selectedIndex < snapshot.selectedKeys.length; selectedIndex++) {
+        var selectedKey = snapshot.selectedKeys[selectedIndex].key;
+        var remappedTime = targetFirstTime +
+          (selectedKey.time - firstSelectedTime) * (targetLastTime - targetFirstTime) / (lastSelectedTime - firstSelectedTime);
+        if (Math.abs(snapshot.keys[keyIndex - 1].time - remappedTime) <= tolerance) {
+          return { failed: "A selected keyframe would overlap an unselected keyframe on the same property." };
+        }
+      }
+    }
+  }
+
+  var changedSnapshots = [];
+  var timeScale = (targetLastTime - targetFirstTime) / (lastSelectedTime - firstSelectedTime);
+  try {
+    for (propertyIndex = 0; propertyIndex < snapshots.length; propertyIndex++) {
+      var currentSnapshot = snapshots[propertyIndex];
+      changedSnapshots.push(currentSnapshot);
+      for (selectedIndex = currentSnapshot.selectedKeys.length - 1; selectedIndex >= 0; selectedIndex--) {
+        currentSnapshot.property.removeKey(currentSnapshot.selectedKeys[selectedIndex].index);
+      }
+      for (selectedIndex = 0; selectedIndex < currentSnapshot.selectedKeys.length; selectedIndex++) {
+        var key = currentSnapshot.selectedKeys[selectedIndex].key;
+        var time = targetFirstTime +
+          (key.time - firstSelectedTime) * (targetLastTime - targetFirstTime) / (lastSelectedTime - firstSelectedTime);
+        currentSnapshot.property.setValueAtTime(time, key.value);
+        var newKeyIndex = currentSnapshot.property.nearestKeyIndex(time);
+        var inEase = [];
+        var outEase = [];
+        var easeIndex;
+        for (easeIndex = 0; easeIndex < key.inEase.length; easeIndex++) {
+          inEase.push(new KeyframeEase(key.inEase[easeIndex].speed / timeScale, key.inEase[easeIndex].influence));
+          outEase.push(new KeyframeEase(key.outEase[easeIndex].speed / timeScale, key.outEase[easeIndex].influence));
+        }
+        currentSnapshot.property.setInterpolationTypeAtKey(newKeyIndex, key.inInterpolation, key.outInterpolation);
+        currentSnapshot.property.setTemporalEaseAtKey(newKeyIndex, inEase, outEase);
+        currentSnapshot.property.setTemporalContinuousAtKey(newKeyIndex, key.temporalContinuous);
+        currentSnapshot.property.setTemporalAutoBezierAtKey(newKeyIndex, key.temporalAutoBezier);
+        if (currentSnapshot.property.propertyValueType === PropertyValueType.TwoD_SPATIAL ||
+            currentSnapshot.property.propertyValueType === PropertyValueType.ThreeD_SPATIAL) {
+          currentSnapshot.property.setSpatialTangentsAtKey(newKeyIndex, key.inSpatialTangent, key.outSpatialTangent);
+          currentSnapshot.property.setSpatialContinuousAtKey(newKeyIndex, key.spatialContinuous);
+          currentSnapshot.property.setSpatialAutoBezierAtKey(newKeyIndex, key.spatialAutoBezier);
+        }
+      }
+    }
+  } catch (error) {
+    for (propertyIndex = changedSnapshots.length - 1; propertyIndex >= 0; propertyIndex--) {
+      try { tkReplacePropertyKeys(changedSnapshots[propertyIndex].property, changedSnapshots[propertyIndex].keys, 0, 0, 0, 0, false); } catch (restoreError) {}
+    }
+    return { failed: error.toString() };
+  }
+  return { adjusted: true, selectedOnly: true };
+}
+
+function tkFitKeyframesToLayer() {
+  var comp = app.project.activeItem;
+  if (!(comp instanceof CompItem) || comp.selectedLayers.length === 0) return "Select one or more layers in a composition first.";
+  var adjusted = 0;
+  var selectedOnlyAdjusted = 0;
+  var skipped = 0;
+  var failed = 0;
+  var failures = [];
+  var i;
+  tkBeginUndo("Fit Keyframes to Layer");
+  try {
+    for (i = 0; i < comp.selectedLayers.length; i++) {
+      var layer = comp.selectedLayers[i];
+      if (layer.locked) { skipped++; continue; }
+      try {
+        var result = tkFitSelectedKeyframesInLayer(layer, comp.frameDuration);
+        if (result === null) result = tkFitKeyframesInScope(layer, [layer], comp.frameDuration);
+        else if (result.selectedOnly) selectedOnlyAdjusted++;
+        if (result.adjusted) adjusted++;
+        else if (result.failed) { failed++; failures.push("Layer " + layer.name + ": " + result.failed); }
+        else skipped++;
+      } catch (error) {
+        failed++;
+        failures.push("Layer " + layer.name + ": " + error.toString());
+      }
+    }
+  } finally {
+    tkEndUndo();
+  }
+  if (adjusted === 0 && failed === 0) return "No keyframes to fit (check selection/locks)";
+  var message = (adjusted > 0 ? "✓ " : "") + adjusted + " layer" + (adjusted > 1 ? "s" : "") + " fitted";
+  if (selectedOnlyAdjusted > 0) message += " (" + selectedOnlyAdjusted + " sel. keys only)";
+  if (failed > 0) message += " - " + failed + " failed: " + failures.join(", ");
+  return message;
+}
+
+function tkTrimLayersToKeyframes() {
+  var comp = app.project.activeItem;
+  if (!(comp instanceof CompItem) || comp.selectedLayers.length === 0) return "Select one or more layers in a composition first.";
+  var trimmed = 0;
+  var unchanged = 0;
+  var skipped = 0;
+  var failed = 0;
+  var failures = [];
+  var tolerance = comp.frameDuration * 0.0001;
+  var selectedLayers = comp.selectedLayers;
+  var i;
+  tkBeginUndo("Trim Layers to Keyframes");
+  try {
+    for (i = 0; i < selectedLayers.length; i++) {
+      var layer = selectedLayers[i];
+      if (layer.locked) { skipped++; continue; }
+      try {
+        var properties = [];
+        tkCollectKeyframedProperties(layer, properties);
+        if (properties.length === 0) { skipped++; continue; }
+        var firstKeyTime = null;
+        var lastKeyTime = null;
+        var propertyIndex;
+        for (propertyIndex = 0; propertyIndex < properties.length; propertyIndex++) {
+          var property = properties[propertyIndex];
+          var propertyFirstTime = property.keyTime(1);
+          var propertyLastTime = property.keyTime(property.numKeys);
+          if (firstKeyTime === null || propertyFirstTime < firstKeyTime) firstKeyTime = propertyFirstTime;
+          if (lastKeyTime === null || propertyLastTime > lastKeyTime) lastKeyTime = propertyLastTime;
+        }
+        var targetInPoint = firstKeyTime;
+        var targetOutPoint = lastKeyTime + comp.frameDuration;
+        var originalInPoint = layer.inPoint;
+        var originalOutPoint = layer.outPoint;
+        if (Math.abs(originalInPoint - targetInPoint) <= tolerance && Math.abs(originalOutPoint - targetOutPoint) <= tolerance) {
+          unchanged++;
+          continue;
+        }
+        try {
+          if (targetInPoint >= layer.outPoint) layer.outPoint = targetOutPoint;
+          layer.inPoint = targetInPoint;
+          layer.outPoint = targetOutPoint;
+          trimmed++;
+        } catch (trimError) {
+          try {
+            if (originalInPoint >= layer.outPoint) layer.outPoint = originalOutPoint;
+            layer.inPoint = originalInPoint;
+            layer.outPoint = originalOutPoint;
+          } catch (restoreError) {}
+          failed++;
+          failures.push(layer.name + ": " + trimError.toString());
+        }
+      } catch (layerError) {
+        failed++;
+        failures.push(layer.name + ": " + layerError.toString());
+      }
+    }
+  } finally {
+    tkEndUndo();
+  }
+  var message = trimmed + " layer(s) trimmed to their keyframe range.";
+  if (unchanged > 0) message += " Already fitted: " + unchanged + ".";
+  if (skipped > 0) message += " Skipped " + skipped + " locked or unanimated layer(s).";
+  if (failed > 0) message += " Failed on " + failed + " layer(s): " + failures.join(" | ");
+  return message;
+}

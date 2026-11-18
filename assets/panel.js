@@ -61,7 +61,8 @@
   }
 
   var defaultView = getPreference('defaultView', 'layer');
-  if (['layer', 'text', 'music'].indexOf(defaultView) === -1) defaultView = 'layer';
+  if (defaultView === 'music') defaultView = 'audio';
+  if (['layer', 'text', 'audio'].indexOf(defaultView) === -1) defaultView = 'layer';
   activateView(defaultView);
 
   var searchToggle = document.getElementById('search-toggle');
@@ -83,12 +84,13 @@
     { title: 'Precomp Each', keywords: 'precomp each individual', view: 'layer', action: 'precomp-each', target: '[data-action="precomp-each"]' },
     { title: 'Duplicate', keywords: 'duplicate copy layer', view: 'layer', action: 'duplicate', target: '[data-action="duplicate"]' },
     { title: 'Rename', keywords: 'rename layer', view: 'layer', action: 'rename', target: '[data-action="rename"]' },
-    { title: 'Fit', keywords: 'fit layer comp', view: 'layer', action: 'fit', target: '[data-action="fit"]' },
+    { title: 'Fit Keyframes', keywords: 'fit keys keyframes layer', view: 'layer', action: 'fit', target: '[data-action="fit"]' },
     { title: 'Invert', keywords: 'invert reverse order', view: 'layer', action: 'invert', target: '[data-action="invert"]' },
+    { title: 'Trim to Keyframes', keywords: 'trim keyframes layer', view: 'layer', action: 'trim-keyframes', target: '[data-action="trim-keyframes"]' },
     { title: 'Find Bad Frames', keywords: 'bad frames find broken bad', view: 'layer', action: 'find-bad', target: '[data-action="find-bad"]' },
-    { title: 'Beat Markers', keywords: 'beat markers music add markers', view: 'music', action: 'add-markers', target: '[data-action="add-markers"]' },
-    { title: 'Snap to Beat', keywords: 'beat snap marker', view: 'music', action: 'beat-snap', target: '[data-action="beat-snap"]' },
-    { title: 'Sequence on Beats', keywords: 'beat sequence markers', view: 'music', action: 'beat-sequence', target: '[data-action="beat-sequence"]' },
+    { title: 'Beat Markers', keywords: 'beat markers music audio add markers', view: 'audio', action: 'add-markers', target: '[data-action="add-markers"]' },
+    { title: 'Snap to Beat', keywords: 'beat snap marker', view: 'audio', action: 'beat-snap', target: '[data-action="beat-snap"]' },
+    { title: 'Sequence on Beats', keywords: 'beat sequence markers', view: 'audio', action: 'beat-sequence', target: '[data-action="beat-sequence"]' },
     { title: 'Auto Captions', keywords: 'captions voice subtitles speech', view: 'text', action: 'auto-captions', target: '[data-action="auto-captions"]' },
     { title: 'Split Text', keywords: 'split text words lines letters', view: 'text', action: 'split-text', target: '[data-action="split-text"]' },
     { title: 'Select Text Layers', keywords: 'select all text layers', view: 'text', action: 'select-text', target: '[data-action="select-text"]' }
@@ -177,7 +179,7 @@
         solid: 'tkCreateSolid()', null: 'tkCreateNullLayer()', shape: 'tkCreateShapeLayer()', camera: 'tkCreateCamera()',
         light: 'tkCreateLight()', 'paste-image': 'tkPasteFromClipboard()', precomp: 'tkPrecomposeSelected(true,true)',
         'precomp-each': 'tkPrecomposeEach(true,true)', decomp: 'tkDecomposeSelected()', duplicate: 'tkDuplicateSelected()',
-        rename: 'tkOpenRename()', sequence: 'tkSequenceSelected()', fit: 'tkFitSelectedToComp()',
+        rename: 'tkOpenRename()', sequence: 'tkSequenceSelected()', fit: 'tkFitKeyframesToLayer()', 'trim-keyframes': 'tkTrimLayersToKeyframes()',
         invert: 'tkReverseLayerOrder()', 'find-bad': 'tkFindBadFrames()', 'beat-reset': 'tkResetBeatMarkers()',
         'beat-markers': 'tkAddBeatMarkers()', 'add-markers': 'tkAddBeatMarkers()', 'beat-snap': 'tkSnapToMarkers()',
         'beat-sequence': 'tkSequenceToMarkers()', 'beat-cut': 'tkCutToMarkers()', 'select-caption-clips': 'tkSelectCaptionAudio()',

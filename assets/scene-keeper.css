@@ -623,6 +623,14 @@ dialog::backdrop { background: rgba(0, 0, 0, .72); }
   font-weight: 600;
 }
 .new-layer-button .action-icon { color: #101820; }
+.layer-subsection-heading {
+  grid-column: 1 / -1;
+  margin: 5px 0 0;
+  color: #a2a2a2;
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
 .new-layer-button .action-icon {
   width: 15px;
   height: 15px;

@@ -25,6 +25,43 @@ INCLUDED_PATHS = (
 )
 
 
+def filter_public_ui(staging: Path) -> None:
+    index_path = staging / "index.html"
+    index = index_path.read_text(encoding="utf-8")
+    index = re.sub(
+        r'\s*<button class="view-tab"[^>]*data-view="(?:text|audio|music)".*?</button>',
+        "",
+        index,
+        flags=re.DOTALL,
+    )
+    index = re.sub(
+        r'\s*<section[^>]*data-view="(?:text|audio|music)".*?</section>',
+        "",
+        index,
+        flags=re.DOTALL,
+    )
+    index = re.sub(
+        r'\s*<section[^>]*aria-labelledby="bad-heading".*?</section>',
+        "",
+        index,
+        flags=re.DOTALL,
+    )
+    index = index.replace('<option value="text">Text</option>', '')
+    index = index.replace('<option value="audio">Audio</option>', '')
+    index = index.replace('<option value="music">Music</option>', '')
+    index_path.write_text(index, encoding="utf-8")
+
+    panel_path = staging / "assets" / "panel.js"
+    panel = panel_path.read_text(encoding="utf-8")
+    panel = re.sub(
+        r"\s*\{ title: '(?:Find Bad Frames|Beat Markers|Snap to Beat|Sequence on Beats|Auto Captions|Split Text|Select Text Layers)'.*?\},",
+        "",
+        panel,
+        flags=re.DOTALL,
+    )
+    panel_path.write_text(panel, encoding="utf-8")
+
+
 def build_archive(tag: str) -> Path:
     version = tag[1:]
     dist = ROOT / "dist"
@@ -43,11 +80,13 @@ def build_archive(tag: str) -> Path:
             shutil.copytree(
                 source,
                 destination,
-                ignore=shutil.ignore_patterns(".DS_Store", "node_modules", "__pycache__", "package_release.py"),
+                ignore=shutil.ignore_patterns(".DS_Store", "node_modules", "__pycache__", "package_release.py", "install-dev.py"),
             )
         else:
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
+
+    filter_public_ui(staging)
 
     manifest_path = staging / "CSXS" / "manifest.xml"
     manifest = manifest_path.read_text(encoding="utf-8")

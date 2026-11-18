@@ -35,3 +35,13 @@ ToolKeeper releases are built from version tags. Create and push a semantic vers
 The installed panel checks the latest public GitHub release when it opens. If a newer release is available, it downloads the matching ZIP and starts the platform-specific installer. After installation, click **Finish** to reload the panel. Manual installers are also included in each release ZIP.
 
 For a local development build, `assets/update-config.js` deliberately has `development: true`; release packaging switches this off in the generated ZIP. The version link in the panel opens the [ToolKeeper releases page](https://github.com/morleyae/ToolKeeper/releases).
+
+## ToolKeeper Dev
+
+On macOS, install a separate development panel without replacing the stable ToolKeeper installation:
+
+```sh
+python3 scripts/install-dev.py
+```
+
+This installs **ToolKeeper Dev** at `~/Library/Application Support/Adobe/CEP/extensions/ToolKeeperDev` with its own CEP extension ID and menu entry. Run the command again to update the Dev copy. It uses the `DEV` version label and does not check or install stable GitHub releases. The dev installer is excluded from production release ZIPs.

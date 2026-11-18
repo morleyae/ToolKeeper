@@ -28,6 +28,7 @@
 
   [versionLink, creatorLink, manualLink].forEach(function (link) {
     if (!link) return;
+    if (config.development && link === versionLink) return;
     link.addEventListener('click', function (event) {
       event.preventDefault();
       openExternal(link);
@@ -38,8 +39,18 @@
     var version = String(config.currentVersion || '').replace(/^v/i, '');
     versionLink.textContent = config.development ? 'ToolKeeper Dev' : ('ToolKeeper v' + (version || ''));
     versionLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper') + '/releases';
+    if (config.development) {
+      versionLink.removeAttribute('href');
+      versionLink.title = 'Preview the update screen';
+      versionLink.style.cursor = 'pointer';
+      versionLink.addEventListener('click', function (event) {
+        event.preventDefault();
+        showNotice('This is a preview of the update screen. No files were downloaded or changed.', true);
+        if (retryButton) retryButton.textContent = 'Retry update';
+      });
+    }
   }
-  if (creatorLink) creatorLink.href = 'https://www.tiktok.com/@morley.ae';
+  if (creatorLink) creatorLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper');
   if (manualLink) manualLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper') + '/releases';
 
   function showNotice(text, allowContinue) {
@@ -292,10 +303,18 @@
   }
 
   if (retryButton) retryButton.addEventListener('click', function () {
+    if (config.development) {
+      message.textContent = 'Retry clicked. This is only a preview; no update was downloaded or installed.';
+      return;
+    }
     if (installTimer) window.clearTimeout(installTimer);
     checkForUpdates();
   });
   if (continueButton) continueButton.addEventListener('click', function () {
+    if (config.development) {
+      hideNotice();
+      return;
+    }
     continueThisSession = true;
     try { window.localStorage.removeItem(pendingKey); } catch (error) {}
     if (installTimer) window.clearTimeout(installTimer);
