@@ -54,12 +54,18 @@ def filter_public_ui(staging: Path) -> None:
     panel_path = staging / "assets" / "panel.js"
     panel = panel_path.read_text(encoding="utf-8")
     panel = re.sub(
-        r"\s*\{ title: '(?:Find Bad Frames|Beat Markers|Snap to Beat|Sequence on Beats|Auto Captions|Split Text|Select Text Layers)'.*?\},",
+        r"(?m)^[ \t]*\{ title: '(?:Find Bad Frames|Beat Markers|Snap to Beat|Sequence on Beats|Auto Captions|Split Text|Select Text Layers)'.*?\},?[ \t]*\r?\n?",
         "",
         panel,
-        flags=re.DOTALL,
     )
     panel_path.write_text(panel, encoding="utf-8")
+
+    private_audio_scripts = ("align_reviewed_captions.py", "setup-whisper.command", "transcribe_audio.py")
+    scripts_dir = staging / "scripts"
+    for script_name in private_audio_scripts:
+        script_path = scripts_dir / script_name
+        if script_path.exists():
+            script_path.unlink()
 
 
 def build_archive(tag: str) -> Path:

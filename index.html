@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ToolKeeper</title>
   <link rel="stylesheet" href="./assets/panel.css?v=17">
+  <link rel="stylesheet" href="./assets/suite.css?v=1">
   <link rel="stylesheet" href="./assets/license.css?v=1">
-  <link rel="stylesheet" href="./assets/scene-keeper.css?v=20">
+  <link rel="stylesheet" href="./assets/scene-keeper.css?v=22">
 </head>
 <body>
   <div id="license-gate" class="license-gate" role="dialog" aria-modal="true" aria-labelledby="license-gate-title" hidden>
@@ -49,14 +50,6 @@
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2.5" y="3" width="8.5" height="8.5" rx="1"/><path d="M5.5 11.5v2h8v-8h-2.5"/></svg>
       <span>Layer</span>
     </button>
-    <button class="view-tab" type="button" data-view="text" aria-label="Text" title="Text">
-      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 3h10M8 3v10M5.5 13h5"/></svg>
-      <span>Text</span>
-    </button>
-    <button class="view-tab" type="button" data-view="audio" aria-label="Audio" title="Audio">
-      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6.5 11.5V4l6-1.5v7.2M6.5 11.5a2 2 0 1 1-2-2h2v2zm6-1.8a2 2 0 1 1-2-2h2v2z"/></svg>
-      <span>Audio</span>
-    </button>
     <button id="search-toggle" class="view-tab search-toggle" type="button" aria-label="Search functions" title="Search functions">
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="6.8" cy="6.8" r="4.3"/><path d="m10 10 3.5 3.5"/></svg>
     </button>
@@ -73,98 +66,57 @@
   <main>
     <section data-view="layer" aria-labelledby="layer-heading">
       <h2 id="layer-heading">LAYER TOOLS</h2>
-      <button id="new-layer-button" class="wide new-layer-button" type="button"><span class="action-icon">＋</span><span>New Layer</span></button>
+      <button id="new-layer-button" class="wide new-layer-button" type="button"><span>New Layer</span></button>
       <div class="button-grid two-column layer-actions-grid">
         <h3 class="layer-subsection-heading">Layers</h3>
-        <button data-action="precomp"><span class="action-icon">◫</span><span>Precomp</span></button>
-        <button data-action="precomp-each"><span class="action-icon">▤</span><span>Precomp each</span></button>
-        <button data-action="decomp"><span class="action-icon">⌂</span><span>Decomp</span></button>
-        <button data-action="duplicate"><span class="action-icon">▧</span><span>Duplicate</span></button>
-        <button data-action="rename"><span class="action-icon">↝</span><span>Rename</span></button>
+        <button data-action="precomp"><span>Precomp</span></button>
+        <button data-action="precomp-each"><span>Precomp each</span></button>
+        <button data-action="decomp"><span>Decomp</span></button>
+        <button data-action="resize-precomps" title="Change the pixel dimensions of selected precompositions">
+          <span>Resize Precomps</span>
+        </button>
+        <button data-action="sort-in-point" title="Sort selected layers by in-point">
+          <span>Sort by In</span>
+        </button>
+        <button data-action="duplicate"><span>Duplicate</span></button>
+        <button data-action="rename"><span>Rename</span></button>
+        <button data-action="reverse-order"><span>Reverse order</span></button>
       </div>
       <div class="button-grid two-column keyframe-actions-grid">
         <h3 class="layer-subsection-heading">Keyframes</h3>
-        <button data-action="fit"><span class="action-icon">↔</span><span>Fit</span></button>
-        <button data-action="invert"><span class="action-icon">⇄</span><span>Invert</span></button>
-        <button data-action="trim-keyframes"><span class="action-icon">⌜</span><span>Trim to Keyframes</span></button>
+        <button data-action="fit"><span>Fit</span></button>
+        <button data-action="invert"><span>Invert</span></button>
+        <button data-action="trim-keyframes"><span>Trim to Keyframes</span></button>
       </div>
-    </section>
-
-    <section data-view="layer" aria-labelledby="bad-heading">
-      <h2 id="bad-heading">BAD FRAMES</h2>
-      <button class="wide" data-action="find-bad"><span>Find bad frames</span></button>
-      <div class="segmented labeled"><span>Sens.</span><input id="bad-sensitivity" type="range" min="1" max="100" value="50"><output id="bad-sensitivity-output">50</output></div>
-      <label class="checkbox-row"><input id="bad-smart" type="checkbox" checked><span>Start and end too<br><small>Fades to black and bold frames until another shot starts.</small></span></label>
-      <div class="segmented"><button data-mode="smooth" class="active">Smooth</button><button data-mode="replace">Replace</button><button data-mode="remove">Remove</button></div>
-    </section>
-
-    <section data-view="audio" aria-labelledby="beat-heading">
-      <div class="section-heading"><h2 id="beat-heading">BEAT MARKERS</h2><button class="mini-icon" data-action="beat-reset" title="Reset markers">↺</button></div>
-      <button class="wide" data-action="beat-markers" disabled><span id="beat-placeholder">Select a layer with sound</span></button>
-      <label class="layer-select"><span>Layer</span><select id="beat-layer"><option value="comp">Use the whole comp</option></select></label>
-      <div class="segmented labeled"><span>Sens.</span><input id="beat-sensitivity" type="range" min="1" max="100" value="55"><output id="beat-sensitivity-output">55</output></div>
-      <button class="primary-wide" data-action="add-markers"><span>⌑</span> Add markers</button>
-      <div class="mini-actions"><button data-action="beat-snap">⌁ Snap</button><button data-action="beat-sequence">↔ Sequence</button><button data-action="beat-cut">✂ Cut</button></div>
-      <h3>Marker</h3>
-      <label class="radio-row"><input type="radio" name="marker-source" value="layer" checked><span>The audio layer</span></label>
-      <label class="radio-row"><input type="radio" name="marker-source" value="comp"><span>The composition</span></label>
-      <label class="checkbox-row"><input id="work-area-only" type="checkbox"><span>Work area only<small>Otherwise the visible part of the layer</small></span></label>
-      <label class="checkbox-row"><input id="replace-markers" type="checkbox" checked><span>Replace previous markers</span></label>
-      <label class="checkbox-row"><input id="number-markers" type="checkbox"><span>Number the markers</span></label>
-      <h3>Sequence on beats</h3>
-      <label class="radio-row"><input type="radio" name="sequence-order" value="top" checked><span>Top layer first</span></label>
-      <label class="radio-row"><input type="radio" name="sequence-order" value="bottom"><span>Bottom layer first</span></label>
-      <label class="radio-row"><input type="radio" name="sequence-order" value="click"><span>Click order</span></label>
-    </section>
-
-    <section data-view="text" aria-labelledby="caption-heading">
-      <h2 id="caption-heading">CAPTIONS</h2>
-      <button class="wide" data-action="select-caption-clips"><span>Select the clip with the voice</span></button>
-      <div class="language-row"><select id="caption-language"><option>Detect language</option><option value="de">Deutsch</option><option value="en">English</option></select></div>
-      <div class="segmented"><button data-caption-mode="phrases" class="active">Phrases</button><button data-caption-mode="words">Words</button><button data-caption-mode="letters">Letters</button></div>
-      <div class="speed-row"><button data-speed="fast" class="active">Fast</button><button data-speed="precise">Precise</button><button data-speed="best">Best</button></div>
-      <div class="segmented labeled"><span>Words</span><input id="caption-words" type="range" min="1" max="10" value="4"><output id="caption-words-output">4</output></div>
-      <h3>Style</h3>
-      <div class="button-grid two-column style-action-grid"><button data-action="create-style"><span class="action-icon">T</span><span>Create style</span></button><button data-action="save-style"><span class="action-icon">⇩</span><span>Save style</span></button></div>
-      <button class="primary-wide" data-action="auto-captions">▭ Auto captions</button>
-    </section>
-
-    <section data-view="text" aria-labelledby="split-heading">
-      <h2 id="split-heading">SPLIT TEXT</h2>
-      <div class="segmented"><button data-split-mode="words" class="active">Words</button><button data-split-mode="lines">Lines</button><button data-split-mode="letters">Letters</button></div>
-      <button class="wide split-run" data-action="split-text"><span>⫼ Split</span></button>
-      <h3>Edit text layers</h3>
-      <div class="button-grid two-column"><button data-action="select-text"><span>▣</span><span>Select all text</span></button><button data-action="invert-text"><span>↕</span><span>Invert order</span></button></div>
-      <div class="style-inputs"><label>X<input id="split-x" type="number" value="0"></label><label>Y<input id="split-y" type="number" value="0"></label><label>Scale<input id="split-scale" type="number" value="100"></label></div>
-      <h3>Settings</h3>
-      <h3 class="subheading">Accuracy</h3>
-      <label class="radio-row"><input type="radio" name="accuracy" value="fast" checked><span><strong>Fast</strong><small>Quick, good for clear voices</small></span></label>
-      <label class="radio-row"><input type="radio" name="accuracy" value="precise"><span><strong>Precise</strong><small>Slower, fewer missed words</small></span></label>
-      <label class="radio-row"><input type="radio" name="accuracy" value="best"><span><strong>Best</strong><small>The biggest AI model</small></span></label>
-      <h3 class="subheading">Captions</h3>
-      <label class="radio-row"><input type="radio" name="caption-position" value="bottom" checked><span>Bottom of the frame</span></label>
-      <label class="radio-row"><input type="radio" name="caption-position" value="center"><span>Center</span></label>
-      <label class="checkbox-row"><input id="caption-uppercase" type="checkbox"><span>UPPERCASE</span></label>
-      <label class="checkbox-row"><input id="caption-punctuation" type="checkbox" checked><span>Keep punctuation<small>Off: no commas or periods</small></span></label>
-      <label class="checkbox-row"><input id="caption-workarea" type="checkbox"><span>Work area only</span></label>
-      <label class="checkbox-row"><input id="caption-style-lock" type="checkbox" checked><span>Keep text style<small>Every caption copies the font and effect</small></span></label>
     </section>
   </main>
 
   <dialog id="rename-dialog">
     <form method="dialog"><h2>Rename Layer</h2><label>Name<input id="rename-name" type="text"></label><div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button id="rename-confirm" value="default" class="primary">Rename</button></div></form>
   </dialog>
+  <dialog id="save-text-style-dialog">
+    <form id="save-text-style-form">
+      <h2>Save Text Style</h2>
+      <label class="settings-field">Style name
+        <input id="save-text-style-name" type="text" maxlength="80" value="My caption style" autocomplete="off">
+      </label>
+      <div class="dialog-actions">
+        <button id="save-text-style-cancel" type="button" class="secondary">Cancel</button>
+        <button id="save-text-style-confirm" type="button" class="primary">Save style</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="new-layer-menu">
     <form method="dialog">
       <h2>New Layer</h2>
       <div class="new-layer-menu-list">
-        <button type="button" data-create-type="text"><span class="action-icon">T</span><span>Text</span></button>
-        <button type="button" data-create-type="solid"><span class="action-icon">■</span><span>Solid</span></button>
-        <button type="button" data-create-type="null"><span class="action-icon">⌑</span><span>Null</span></button>
-        <button type="button" data-create-type="shape"><span class="action-icon">△</span><span>Shape</span></button>
-        <button type="button" data-create-type="camera"><span class="action-icon">▣</span><span>Camera</span></button>
-        <button type="button" data-create-type="light"><span class="action-icon">◉</span><span>Light</span></button>
-        <button type="button" data-create-type="adjustment"><span class="action-icon">◐</span><span>Adjustment</span></button>
+        <button type="button" data-create-type="text"><span>Text</span></button>
+        <button type="button" data-create-type="solid"><span>Solid</span></button>
+        <button type="button" data-create-type="null"><span>Null</span></button>
+        <button type="button" data-create-type="shape"><span>Shape</span></button>
+        <button type="button" data-create-type="camera"><span>Camera</span></button>
+        <button type="button" data-create-type="light"><span>Light</span></button>
+        <button type="button" data-create-type="adjustment"><span>Adjustment</span></button>
       </div>
       <div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button></div>
     </form>
@@ -185,6 +137,45 @@
       <div class="dialog-actions"><button id="create-layer-cancel" type="button" class="secondary">Cancel</button><button id="create-layer-confirm" type="button" class="primary">Create</button></div>
     </form>
   </dialog>
+  <dialog id="resize-precomps-dialog">
+    <form method="dialog">
+      <h2>Resize Selected Precomps</h2>
+      <p>Set the composition dimensions in pixels. Only selected precomp layers are changed.</p>
+      <div class="size-fields create-layer-fields">
+        <label>Width<input id="resize-precomps-width" type="number" min="1" max="30000" step="1" value="1920"></label>
+        <label>Height<input id="resize-precomps-height" type="number" min="1" max="30000" step="1" value="1080"></label>
+      </div>
+      <div class="dialog-actions">
+        <button id="resize-precomps-cancel" type="button" class="secondary">Cancel</button>
+        <button id="resize-precomps-apply" type="button" class="primary">Resize</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="caption-progress-dialog" aria-labelledby="caption-progress-title">
+    <form method="dialog">
+      <h2 id="caption-progress-title">Creating Captions</h2>
+      <div class="caption-progress-body">
+        <div class="caption-progress-spinner" aria-hidden="true"></div>
+        <p id="caption-progress-status" role="status" aria-live="polite">Preparing captions...</p>
+        <span id="caption-progress-percent" class="caption-progress-percent">0%</span>
+      </div>
+      <progress class="caption-progress-bar" aria-label="Caption creation progress"></progress>
+      <div class="dialog-actions">
+        <button id="caption-progress-close" type="button" class="secondary" disabled>Close</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="caption-review-dialog">
+    <form method="dialog">
+      <h2>Review Captions</h2>
+      <p>Edit the recognized text before creating cumulative word-by-word caption layers. Press Enter twice to start a new sentence.</p>
+      <textarea id="caption-review-text" spellcheck="true" style="width:100%;min-height:220px;resize:vertical"></textarea>
+      <div class="dialog-actions">
+        <button id="caption-review-cancel" type="button" class="secondary">Cancel</button>
+        <button id="caption-review-create" type="button" class="primary">Create Layers</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="settings-dialog">
     <form method="dialog" class="settings-form">
       <h2>Settings</h2>
@@ -192,7 +183,7 @@
         <div><strong>ToolKeeper License</strong><small id="license-settings-status" role="status">Checking license service...</small></div>
         <button id="license-manage-button" type="button" class="secondary compact">Manage</button>
       </div>
-      <label class="settings-select-row">Start view<select id="default-view"><option value="layer">Layer</option><option value="text">Text</option><option value="audio">Audio</option></select></label>
+      <label class="settings-select-row">Start view<select id="default-view"><option value="layer">Layer</option></select></label>
       <label class="checkbox-row"><input id="confirm-destructive" type="checkbox" checked><span>Confirm destructive actions</span></label>
       <label class="checkbox-row"><input id="clear-search-on-use" type="checkbox" checked><span>Clear search after using a result</span></label>
       <div class="dialog-actions"><button value="close" class="primary">Done</button></div>
@@ -210,6 +201,17 @@
       </div>
     </section>
   </div>
+  <dialog id="toolkeeper-whats-new" aria-labelledby="toolkeeper-whats-new-title" aria-describedby="toolkeeper-whats-new-copy">
+    <form method="dialog">
+      <h2 id="toolkeeper-whats-new-title">What's New in ToolKeeper</h2>
+      <p id="toolkeeper-whats-new-copy" class="confirm-copy">Here are the latest changes.</p>
+      <ul id="toolkeeper-whats-new-list"></ul>
+      <div class="dialog-actions">
+        <button id="toolkeeper-whats-new-close" type="button" class="primary">Got it</button>
+      </div>
+    </form>
+  </dialog>
+  <div id="action-notification" class="action-notification" role="status" aria-live="polite" hidden></div>
   <footer class="panel-credit">
     <a id="toolkeeper-version" class="panel-credit-link" href="https://github.com/morleyae/ToolKeeper/releases/latest" target="_blank" rel="noopener noreferrer">ToolKeeper Dev</a>
     <a id="toolkeeper-creator-link" class="panel-credit-link" href="https://www.tiktok.com/@morley.ae" target="_blank" rel="noopener noreferrer">by morley.ae</a>
@@ -218,7 +220,8 @@
   <script src="./assets/license-config.js?v=1"></script>
   <script src="./assets/license.js?v=1"></script>
   <script src="./assets/update-config.js?v=1"></script>
-  <script src="./assets/updater.js?v=1"></script>
-  <script src="./assets/panel.js?v=21"></script>
+  <script src="./assets/updater.js?v=2"></script>
+  <script src="./assets/panel.js?v=49"></script>
+  <script src="./assets/components.js?v=1"></script>
 </body>
 </html>

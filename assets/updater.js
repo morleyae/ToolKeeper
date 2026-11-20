@@ -8,7 +8,16 @@
   var manualLink = document.getElementById('toolkeeper-manual-update-link');
   var versionLink = document.getElementById('toolkeeper-version');
   var creatorLink = document.getElementById('toolkeeper-creator-link');
+  var whatsNewDialog = document.getElementById('toolkeeper-whats-new');
+  var whatsNewTitle = document.getElementById('toolkeeper-whats-new-title');
+  var whatsNewCopy = document.getElementById('toolkeeper-whats-new-copy');
+  var whatsNewList = document.getElementById('toolkeeper-whats-new-list');
+  var whatsNewClose = document.getElementById('toolkeeper-whats-new-close');
   var pendingKey = 'toolkeeper.update.pendingVersion';
+  var installedVersionKey = 'toolkeeper.installedVersion';
+  var releaseNotes = {
+    '1.0.8': ["ToolKeeper now shows a short What's New summary after an update."]
+  };
   var checkInFlight = false;
   var continueThisSession = false;
   var installTimer = null;
@@ -18,12 +27,16 @@
 
   function openExternal(link) {
     if (!link || !link.href) return;
-    var cep = cepApi();
-    if (cep && cep.util && typeof cep.util.openURLInDefaultBrowser === 'function') {
-      cep.util.openURLInDefaultBrowser(link.href);
-    } else {
-      window.open(link.href, '_blank', 'noopener');
+    var url = String(link.href || '').trim();
+    var cepObjects = [window.__adobe_cep__, window.cep, cepApi()].filter(Boolean);
+    for (var i = 0; i < cepObjects.length; i += 1) {
+      var util = cepObjects[i].util;
+      if (util && typeof util.openURLInDefaultBrowser === 'function') {
+        util.openURLInDefaultBrowser(url);
+        return;
+      }
     }
+    window.open(url, '_blank', 'noopener');
   }
 
   [versionLink, creatorLink, manualLink].forEach(function (link) {
@@ -37,9 +50,13 @@
   if (versionLink) {
     var version = String(config.currentVersion || '').replace(/^v/i, '');
     versionLink.textContent = config.development ? 'ToolKeeper Dev' : ('ToolKeeper v' + (version || ''));
-    versionLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper') + '/releases/latest';
+    versionLink.href = 'https://github.com/morleyae/ToolKeeper/releases/latest';
+    versionLink.target = '_blank';
   }
-  if (creatorLink) creatorLink.href = 'https://www.tiktok.com/@morley.ae';
+  if (creatorLink) {
+    creatorLink.href = 'https://www.tiktok.com/@morley.ae';
+    creatorLink.target = '_blank';
+  }
   if (manualLink) manualLink.href = 'https://github.com/' + (config.repository || 'morleyae/ToolKeeper') + '/releases/latest';
 
   function showNotice(text, allowContinue) {
@@ -68,6 +85,40 @@
       if (left < right) return -1;
     }
     return 0;
+  }
+
+  function getInstalledVersion() {
+    try { return String(window.localStorage.getItem(installedVersionKey) || ''); } catch (error) { return ''; }
+  }
+
+  function storeCurrentVersion() {
+    try { window.localStorage.setItem(installedVersionKey, String(config.currentVersion || '')); } catch (error) {}
+  }
+
+  function showWhatsNew() {
+    var currentVersion = String(config.currentVersion || '').replace(/^v/i, '');
+    var previousVersion = getInstalledVersion();
+    if (!currentVersion || compareVersions(currentVersion, previousVersion) <= 0 || !whatsNewDialog || !whatsNewList) return false;
+
+    var notes = releaseNotes[currentVersion] || [];
+    if (!notes.length) {
+      storeCurrentVersion();
+      return false;
+    }
+
+    whatsNewTitle.textContent = "What's New in ToolKeeper v" + currentVersion;
+    whatsNewCopy.textContent = previousVersion
+      ? 'Since v' + previousVersion + ', ToolKeeper has changed in these ways:'
+      : 'Here are the latest improvements in ToolKeeper:';
+    while (whatsNewList.firstChild) whatsNewList.removeChild(whatsNewList.firstChild);
+    notes.forEach(function (note) {
+      var item = document.createElement('li');
+      item.textContent = note;
+      whatsNewList.appendChild(item);
+    });
+    whatsNewDialog.showModal();
+    window.setTimeout(function () { if (whatsNewClose) whatsNewClose.focus(); }, 0);
+    return true;
   }
 
   function normalizePath(path) {
@@ -315,6 +366,12 @@
     try { window.localStorage.removeItem(pendingKey); } catch (error) {}
     window.location.reload();
   });
+
+  if (whatsNewClose) whatsNewClose.addEventListener('click', function () { whatsNewDialog.close(); });
+  if (whatsNewDialog) whatsNewDialog.addEventListener('close', storeCurrentVersion);
+  window.setTimeout(function () {
+    if (!notice || notice.hidden) showWhatsNew();
+  }, 1500);
 
   window.setTimeout(checkForUpdates, 1200);
 })();
