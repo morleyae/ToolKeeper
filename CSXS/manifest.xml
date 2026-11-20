@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.endlessaudios.toolkeeper" ExtensionBundleVersion="1.0.9">
-  <ExtensionList><Extension Id="com.endlessaudios.toolkeeper.panel" Version="1.0.9" /></ExtensionList>
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.endlessaudios.toolkeeper" ExtensionBundleVersion="1.0.10">
+  <ExtensionList><Extension Id="com.endlessaudios.toolkeeper.panel" Version="1.0.10" /></ExtensionList>
   <ExecutionEnvironment>
     <HostList><Host Name="AEFT" Version="[17.0,99.9]" /></HostList>
     <LocaleList><Locale Code="All" /></LocaleList>

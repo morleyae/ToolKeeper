@@ -20,6 +20,10 @@
     '1.0.9': [
       'Added the Audio and Text categories to the public ToolKeeper release.',
       'Beat markers use the local beat tracker, and audio captions are included.'
+    ],
+    '1.0.10': [
+      'Added the Audio and Text categories to the public ToolKeeper release.',
+      'Beat markers use the local beat tracker, and audio captions are included.'
     ]
   };
   var checkInFlight = false;

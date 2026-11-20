@@ -62,8 +62,13 @@ def filter_public_ui(staging: Path) -> None:
 def include_toolkeeper_public_audio(staging: Path) -> None:
     beat_source = ROOT / "scripts" / "toolkeeper-dev-beat"
     assets = staging / "assets"
+    bundle_source = beat_source / "dist" / "beat-tracker.js"
+    bundle_target = assets / "beat-tracker.js"
+    if bundle_source.exists():
+        shutil.copy2(bundle_source, bundle_target)
+    elif not bundle_target.exists():
+        raise FileNotFoundError(f"Missing public Beat Tracker bundle: {bundle_source}")
     for source_name, target_name in (
-        ("dist/beat-tracker.js", "beat-tracker.js"),
         ("toolkeeper-dev-beats.js", "toolkeeper-dev-beats.js"),
         ("THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md"),
     ):
