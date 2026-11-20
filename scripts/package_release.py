@@ -29,13 +29,13 @@ def filter_public_ui(staging: Path) -> None:
     index_path = staging / "index.html"
     index = index_path.read_text(encoding="utf-8")
     index = re.sub(
-        r'\s*<button class="view-tab"[^>]*data-view="(?:text|audio|music)".*?</button>',
+        r'\s*<button class="view-tab"[^>]*data-view="music".*?</button>',
         "",
         index,
         flags=re.DOTALL,
     )
     index = re.sub(
-        r'\s*<section[^>]*data-view="(?:text|audio|music)".*?</section>',
+        r'\s*<section[^>]*data-view="music".*?</section>',
         "",
         index,
         flags=re.DOTALL,
@@ -46,26 +46,45 @@ def filter_public_ui(staging: Path) -> None:
         index,
         flags=re.DOTALL,
     )
-    index = index.replace('<option value="text">Text</option>', '')
-    index = index.replace('<option value="audio">Audio</option>', '')
     index = index.replace('<option value="music">Music</option>', '')
     index_path.write_text(index, encoding="utf-8")
 
     panel_path = staging / "assets" / "panel.js"
     panel = panel_path.read_text(encoding="utf-8")
     panel = re.sub(
-        r"(?m)^[ \t]*\{ title: '(?:Find Bad Frames|Beat Markers|Snap to Beat|Sequence on Beats|Auto Captions|Split Text|Select Text Layers)'.*?\},?[ \t]*\r?\n?",
+        r"(?m)^[ \t]*\{ title: 'Find Bad Frames'.*?\},?[ \t]*\r?\n?",
         "",
         panel,
     )
     panel_path.write_text(panel, encoding="utf-8")
 
-    private_audio_scripts = ("align_reviewed_captions.py", "setup-whisper.command", "transcribe_audio.py")
-    scripts_dir = staging / "scripts"
-    for script_name in private_audio_scripts:
-        script_path = scripts_dir / script_name
-        if script_path.exists():
-            script_path.unlink()
+
+def include_toolkeeper_public_audio(staging: Path) -> None:
+    beat_source = ROOT / "scripts" / "toolkeeper-dev-beat"
+    assets = staging / "assets"
+    for source_name, target_name in (
+        ("dist/beat-tracker.js", "beat-tracker.js"),
+        ("toolkeeper-dev-beats.js", "toolkeeper-dev-beats.js"),
+        ("THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md"),
+    ):
+        shutil.copy2(beat_source / source_name, assets / target_name)
+
+    host_path = staging / "jsx" / "hostscript.jsx"
+    host = host_path.read_text(encoding="utf-8")
+    host_marker = "function tkGetDevBeatAudioContext("
+    if host_marker not in host:
+        host += "\n\n" + (beat_source / "beat-host.jsx").read_text(encoding="utf-8")
+        host_path.write_text(host, encoding="utf-8")
+
+    html_path = staging / "index.html"
+    html = html_path.read_text(encoding="utf-8")
+    if "./assets/toolkeeper-dev-beats.js" not in html:
+        scripts = (
+            '  <script src="./assets/beat-tracker.js?v=20261120a"></script>\n'
+            '  <script src="./assets/toolkeeper-dev-beats.js?v=20261120a"></script>\n'
+        )
+        html = html.replace("</body>", scripts + "</body>", 1)
+        html_path.write_text(html, encoding="utf-8")
 
 
 def build_archive(tag: str) -> Path:
@@ -86,13 +105,21 @@ def build_archive(tag: str) -> Path:
             shutil.copytree(
                 source,
                 destination,
-                ignore=shutil.ignore_patterns(".DS_Store", "node_modules", "__pycache__", "package_release.py", "install-dev.py"),
-            )
+                ignore=shutil.ignore_patterns(
+                    ".DS_Store",
+                    "node_modules",
+                    "__pycache__",
+                    "package_release.py",
+                    "install-dev.py",
+                    "toolkeeper-dev-beat",
+                ),
+                    )
         else:
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
 
     filter_public_ui(staging)
+    include_toolkeeper_public_audio(staging)
 
     manifest_path = staging / "CSXS" / "manifest.xml"
     manifest = manifest_path.read_text(encoding="utf-8")

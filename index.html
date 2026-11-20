@@ -50,6 +50,14 @@
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2.5" y="3" width="8.5" height="8.5" rx="1"/><path d="M5.5 11.5v2h8v-8h-2.5"/></svg>
       <span>Layer</span>
     </button>
+    <button class="view-tab" type="button" data-view="text" aria-label="Text" title="Text">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 3h10M8 3v10M5.5 13h5"/></svg>
+      <span>Text</span>
+    </button>
+    <button class="view-tab" type="button" data-view="audio" aria-label="Audio" title="Audio">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6.5 11.5V4l6-1.5v7.2M6.5 11.5a2 2 0 1 1-2-2h2v2zm6-1.8a2 2 0 1 1-2-2h2v2z"/></svg>
+      <span>Audio</span>
+    </button>
     <button id="search-toggle" class="view-tab search-toggle" type="button" aria-label="Search functions" title="Search functions">
       <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="6.8" cy="6.8" r="4.3"/><path d="m10 10 3.5 3.5"/></svg>
     </button>
@@ -88,6 +96,81 @@
         <button data-action="invert"><span>Invert</span></button>
         <button data-action="trim-keyframes"><span>Trim to Keyframes</span></button>
       </div>
+    </section>
+
+    <section data-view="audio" aria-labelledby="beat-heading">
+      <div class="section-heading"><h2 id="beat-heading">BEAT MARKERS</h2></div>
+      <div class="layer-select"><span id="beat-placeholder">Select one audio layer in the timeline.</span></div>
+      <div class="segmented labeled"><span>Sens.</span><input id="beat-sensitivity" type="range" min="1" max="100" value="35"><output id="beat-sensitivity-output">35</output></div>
+      <label class="checkbox-row"><input id="replace-markers" type="checkbox" checked><span>Replace previous markers</span></label>
+      <button class="primary-wide new-layer-button" data-action="add-markers"><span>Add markers</span></button>
+    </section>
+
+    <section data-view="text" aria-labelledby="caption-heading">
+      <h2 id="caption-heading">CAPTIONS</h2>
+      <button class="wide" data-action="select-caption-clips" hidden><span>Select the clip with the voice</span></button>
+      <button class="primary-wide" data-action="auto-captions" aria-expanded="false" aria-controls="audio-captions-panel"><span>Auto captions</span></button>
+      <div id="audio-captions-panel" class="audio-captions-panel" hidden>
+        <p class="caption-panel-copy">Select one audio or video layer. Transcription stays local and aligns words to the audio.</p>
+        <h3 class="subheading">Accuracy</h3>
+        <div class="caption-accuracy-grid" role="radiogroup" aria-label="Caption accuracy">
+          <label class="caption-accuracy-button"><input type="radio" name="accuracy" value="fast"><span>Fast</span></label>
+          <label class="caption-accuracy-button"><input type="radio" name="accuracy" value="precise"><span>Precise</span></label>
+          <label class="caption-accuracy-button"><input type="radio" name="accuracy" value="best" checked><span>Best</span></label>
+        </div>
+        <h3 class="subheading">Captions</h3>
+        <div class="caption-position-grid" role="radiogroup" aria-label="Caption position">
+          <label class="caption-position-button"><input type="radio" name="caption-position" value="bottom"><span><i class="caption-position-marker caption-position-marker-bottom"></i><span>Bottom</span></span></label>
+          <label class="caption-position-button"><input type="radio" name="caption-position" value="center" checked><span><i class="caption-position-marker caption-position-marker-center"></i><span>Center</span></span></label>
+          <label class="caption-position-button"><input type="radio" name="caption-position" value="top"><span><i class="caption-position-marker caption-position-marker-top"></i><span>Top</span></span></label>
+        </div>
+        <div class="caption-letter-case-field">
+          <span>Caption letter case</span>
+          <input id="audio-captions-case" type="hidden" value="normal">
+          <div class="segmented caption-letter-case" aria-label="Caption letter case">
+            <button type="button" data-letter-case="upper">TT</button>
+            <button type="button" data-letter-case="normal" class="active">Tt</button>
+            <button type="button" data-letter-case="lower">tt</button>
+          </div>
+        </div>
+        <label class="settings-field">Language
+          <select id="audio-captions-language">
+            <option value="English" selected>English</option>
+            <option value="German">German</option>
+            <option value="French">French</option>
+            <option value="Spanish">Spanish</option>
+            <option value="Italian">Italian</option>
+            <option value="Portuguese">Portuguese</option>
+            <option value="Dutch">Dutch</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Korean">Korean</option>
+            <option value="Chinese">Chinese</option>
+            <option value="">Auto-detect</option>
+          </select>
+        </label>
+        <label class="checkbox-row"><input id="caption-punctuation" type="checkbox" checked><span>Keep punctuation<small>Off: no commas or periods</small></span></label>
+        <label class="settings-field">Saved text style
+          <span class="saved-style-field">
+            <select id="audio-captions-text-style">
+              <option value="">Selected text layer</option>
+            </select>
+            <button id="delete-text-style" type="button" aria-label="Delete saved text style" title="Delete saved text style" disabled>
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 5h9M6 5V3.5h4V5M5 5l.5 8h5l.5-8M7 7v4M9 7v4"/></svg>
+            </button>
+          </span>
+        </label>
+        <button type="button" class="wide save-style-button" data-action="save-style"><span>Save selected text style</span></button>
+        <p id="audio-captions-status" role="status" aria-live="polite"></p>
+        <button id="audio-captions-run" type="button" class="primary-wide">Transcribe Audio</button>
+      </div>
+    </section>
+
+    <section data-view="text" aria-labelledby="split-heading">
+      <h2 id="split-heading">SPLIT TEXT</h2>
+      <button class="wide split-run" data-action="split-text"><span>Split</span></button>
+      <h3>Edit text layers</h3>
+      <div class="button-grid two-column"><button data-action="select-text"><span>Select all text</span></button><button data-action="invert-text"><span>Invert order</span></button></div>
+      <div class="style-inputs"><label>X<input id="split-x" type="number" value="0"></label><label>Y<input id="split-y" type="number" value="0"></label><label>Scale<input id="split-scale" type="number" value="100"></label></div>
     </section>
   </main>
 
@@ -183,7 +266,7 @@
         <div><strong>ToolKeeper License</strong><small id="license-settings-status" role="status">Checking license service...</small></div>
         <button id="license-manage-button" type="button" class="secondary compact">Manage</button>
       </div>
-      <label class="settings-select-row">Start view<select id="default-view"><option value="layer">Layer</option></select></label>
+      <label class="settings-select-row">Start view<select id="default-view"><option value="layer">Layer</option><option value="text">Text</option><option value="audio">Audio</option></select></label>
       <label class="checkbox-row"><input id="confirm-destructive" type="checkbox" checked><span>Confirm destructive actions</span></label>
       <label class="checkbox-row"><input id="clear-search-on-use" type="checkbox" checked><span>Clear search after using a result</span></label>
       <div class="dialog-actions"><button value="close" class="primary">Done</button></div>
@@ -220,8 +303,10 @@
   <script src="./assets/license-config.js?v=1"></script>
   <script src="./assets/license.js?v=1"></script>
   <script src="./assets/update-config.js?v=1"></script>
-  <script src="./assets/updater.js?v=2"></script>
-  <script src="./assets/panel.js?v=49"></script>
+  <script src="./assets/updater.js?v=3"></script>
+  <script src="./assets/panel.js?v=50"></script>
   <script src="./assets/components.js?v=1"></script>
+  <script src="./assets/beat-tracker.js?v=20261120a"></script>
+  <script src="./assets/toolkeeper-dev-beats.js?v=20261120a"></script>
 </body>
 </html>

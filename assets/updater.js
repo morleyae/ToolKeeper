@@ -16,7 +16,11 @@
   var pendingKey = 'toolkeeper.update.pendingVersion';
   var installedVersionKey = 'toolkeeper.installedVersion';
   var releaseNotes = {
-    '1.0.8': ["ToolKeeper now shows a short What's New summary after an update."]
+    '1.0.8': ["ToolKeeper now shows a short What's New summary after an update."],
+    '1.0.9': [
+      'Added the Audio and Text categories to the public ToolKeeper release.',
+      'Beat markers use the local beat tracker, and audio captions are included.'
+    ]
   };
   var checkInFlight = false;
   var continueThisSession = false;

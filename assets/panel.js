@@ -135,6 +135,12 @@
     { title: 'Reverse Layer Order', keywords: 'invert reverse selected layers order stack', view: 'layer', action: 'reverse-order', target: '[data-action="reverse-order"]' },
     { title: 'Invert Keyframes', keywords: 'invert reverse keyframes keys', view: 'layer', action: 'invert', target: '[data-action="invert"]' },
     { title: 'Trim to Keyframes', keywords: 'trim keyframes layer', view: 'layer', action: 'trim-keyframes', target: '[data-action="trim-keyframes"]' },
+    { title: 'Beat Markers', keywords: 'beat markers music audio add markers', view: 'audio', action: 'add-markers', target: '[data-action="add-markers"]' },
+    { title: 'Snap to Beat', keywords: 'beat snap marker', view: 'audio', action: 'beat-snap', target: '[data-action="beat-snap"]' },
+    { title: 'Sequence on Beats', keywords: 'beat sequence markers', view: 'audio', action: 'beat-sequence', target: '[data-action="beat-sequence"]' },
+    { title: 'Auto Captions', keywords: 'captions voice subtitles speech', view: 'text', action: 'auto-captions', target: '[data-action="auto-captions"]' },
+    { title: 'Split Text', keywords: 'split text cumulative words layers', view: 'text', action: 'split-text', target: '[data-action="split-text"]' },
+    { title: 'Select Text Layers', keywords: 'select all text layers', view: 'text', action: 'select-text', target: '[data-action="select-text"]' }
   ];
   var currentSearchMatches = [];
 
